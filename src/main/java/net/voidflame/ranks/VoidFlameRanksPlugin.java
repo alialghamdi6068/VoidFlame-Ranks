@@ -213,7 +213,7 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
                 Player target=Bukkit.getPlayerExact(args[1]);
                 if(target==null){p.sendMessage("§cPlayer must be online for this command.");return true;}
                 String id=args.length>=3?args[2]:"member";
-                ranks.setPlayerRank(target.getUniqueId(),id).thenRun(() -> Bukkit.getScheduler().runTask(this,()->{p.sendMessage("§aRank updated.");applyRank(target,id);})).exceptionally(e->{p.sendMessage("§c"+root(e).getMessage());return null;});
+                ranks.setPlayerRank(target.getUniqueId(),id).thenRun(() -> Bukkit.getScheduler().runTask(this,()->{p.sendMessage("§aRank updated.");applyRank(target.getUniqueId());})).exceptionally(e->{p.sendMessage("§c"+root(e).getMessage());return null;});
                 return true;
             }
             openMain(p); return true;
@@ -246,7 +246,7 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
         Player p=Bukkit.getPlayer(uuid);
         if(p==null)return;
         ranks.getPlayerRank(uuid).thenAccept(id -> Bukkit.getScheduler().runTask(this,()->{
-            RankService.Rank r=ranks.getRank(id);
+            Rank r=ranks.getRank(id);
             if(r==null)r=ranks.getRank("member");
             p.setDisplayName(ChatColor.translateAlternateColorCodes('&',r.prefix()+" "+p.getName()+r.suffix()));
             p.getEffectivePermissions().forEach(x -> {});
@@ -281,7 +281,7 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
         item(inv,12,Material.PAPER,"§bPrefix","§7"+r.prefix(),"§8Click to change");
         item(inv,14,Material.PAPER,"§bSuffix","§7"+r.suffix(),"§8Click to change");
         item(inv,16,Material.ANVIL,"§bWeight","§7"+r.weight(),"§8Click to change");
-        item(inv,19,Material.CHAIN,"§bParent","§7"+(r.parent()==null?"None":r.parent()),"§8Click to change");
+        item(inv,19,Material.LEAD,"§bParent","§7"+(r.parent()==null?"None":r.parent()),"§8Click to change");
         item(inv,21,Material.COMPARATOR,"§dPermissions","§7"+ranks.permissions(r.id()).size()+" direct permissions");
         item(inv,23,Material.PLAYER_HEAD,"§aPlayers","§7Assign this rank to a player");
         item(inv,31,Material.REDSTONE_BLOCK,"§cDelete Rank");
@@ -341,8 +341,8 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
                             .thenRun(()->Bukkit.getScheduler().runTask(this,()->{p.sendMessage("§aRank created.");openRanks(p);}));
                 }
                 case RENAME -> update(p,in.rankId(),r->new Rank(r.id(),value,r.prefix(),r.suffix(),r.weight(),r.parent()));
-                case PREFIX -> update(p,in.rankId(),r->new Rank(r.id(),value,r.prefix(),r.suffix(),r.weight(),r.parent()));
-                case SUFFIX -> update(p,in.rankId(),r->new Rank(r.id(),r.name(),value,r.suffix(),r.weight(),r.parent()));
+                case PREFIX -> update(p,in.rankId(),r->new Rank(r.id(),r.name(),value,r.suffix(),r.weight(),r.parent()));
+                case SUFFIX -> update(p,in.rankId(),r->new Rank(r.id(),r.name(),r.prefix(),value,r.weight(),r.parent()));
                 case WEIGHT -> { int n=Integer.parseInt(value); update(p,in.rankId(),r->new Rank(r.id(),r.name(),r.prefix(),r.suffix(),n,r.parent())); }
                 case PARENT -> { String parent=value.equalsIgnoreCase("none")?null:value.toLowerCase(Locale.ROOT); if(parent!=null&&ranks.getRank(parent)==null)throw new IllegalArgumentException("Unknown parent rank."); if(parent!=null&&parent.equals(in.rankId()))throw new IllegalArgumentException("A rank cannot inherit itself."); update(p,in.rankId(),r->new Rank(r.id(),r.name(),r.prefix(),r.suffix(),r.weight(),parent)); }
                 case ADD_PERMISSION -> { List<String> x=new ArrayList<>(ranks.permissions(in.rankId()));x.add(value);ranks.setPermissions(in.rankId(),x).thenRun(()->{p.sendMessage("§aPermission added.");openPermissions(p,ranks.getRank(in.rankId()));}); }
@@ -400,7 +400,7 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
         }
         if(title.equals(GUI_PLAYERS)){
             if(e.getRawSlot()==53){openMain(p);return;}
-            List<Player> ps=new ArrayList<>(Bukkit.getOnlinePlayers()).stream().sorted(Comparator.comparing(Player::getName,String.CASE_INSENSITIVE_ORDER)).toList();int s=e.getRawSlot();if(s>=0&&s<45&&s<ps.size()){Player target=ps.get(s);begin(p,new ChatInput(InputType.PLAYER_RANK,null,target.getName()),"Enter rank ID for "+target.getName()+".");}
+            List<Player> ps=Bukkit.getOnlinePlayers().stream().sorted(Comparator.comparing(Player::getName,String.CASE_INSENSITIVE_ORDER)).toList();int s=e.getRawSlot();if(s>=0&&s<45&&s<ps.size()){Player target=ps.get(s);begin(p,new ChatInput(InputType.PLAYER_RANK,null,target.getName()),"Enter rank ID for "+target.getName()+".");}
             return;
         }
         if(title.equals(GUI_TESTER)){

@@ -1,0 +1,9 @@
+name: VoidFlame-Ranks
+version: 1.0.0
+main: net.voidflame.ranks.VoidFlameRanksPlugin
+description: Ranks module for VoidFlame MC.
+author: VoidFlame
+website: https://github.com/alialghamdi6068/VoidFlame-Ranks
+api-version: '26.2'
+load: POSTWORLD
+depend: [VoidFlame-Core]

@@ -1,9 +1,24 @@
 name: VoidFlame-Ranks
 version: 1.0.0
 main: net.voidflame.ranks.VoidFlameRanksPlugin
-description: Ranks module for VoidFlame MC.
+description: Professional rank, permission, hierarchy and player management for VoidFlame MC.
 author: VoidFlame
 website: https://github.com/alialghamdi6068/VoidFlame-Ranks
 api-version: '26.2'
 load: POSTWORLD
 depend: [VoidFlame-Core]
+
+commands:
+  ranks:
+    description: Open the VoidFlame rank management GUI.
+    usage: /ranks
+    permission: voidflame.ranks.admin
+  rank:
+    description: Manage ranks and player assignments.
+    usage: /rank [set <player> <rank>]
+    permission: voidflame.ranks.admin
+
+permissions:
+  voidflame.ranks.admin:
+    description: Full access to VoidFlame rank management.
+    default: op

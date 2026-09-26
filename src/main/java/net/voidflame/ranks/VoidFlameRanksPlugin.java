@@ -198,7 +198,11 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
                         for (Map<String,Object> row: rows) {
                             String key=String.valueOf(row.get("data_key")).substring(5);
                             Rank x=cache.get(key);
-                            if (x != null && safe.equals(x.parent())) cache.put(key, new Rank(x.id(),x.name(),x.prefix(),x.suffix(),x.weight(),r.parent()));
+                            if (x != null && safe.equals(x.parent())) {
+                                Rank updated = new Rank(x.id(), x.name(), x.prefix(), x.suffix(), x.weight(), r.parent());
+                                cache.put(key, updated);
+                                plugin.put("rank." + key, encodeRank(updated));
+                            }
                         }
                     });
         }
@@ -213,6 +217,7 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
         }
 
         public CompletableFuture<Void> setPermissions(String rankId, Collection<String> values) {
+            if (getRank(rankId) == null) return CompletableFuture.failedFuture(new IllegalArgumentException("Unknown rank."));
             LinkedHashSet<String> set = new LinkedHashSet<>();
             for (String p: values) if (p != null && !p.isBlank()) set.add(p.toLowerCase(Locale.ROOT));
             permissions.put(rankId, set);

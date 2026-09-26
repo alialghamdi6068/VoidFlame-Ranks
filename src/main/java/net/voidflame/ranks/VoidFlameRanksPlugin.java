@@ -1,6 +1,7 @@
 package net.voidflame.ranks;
 
 import net.voidflame.core.storage.StorageService;
+import net.voidflame.core.api.AuditLogService;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -209,7 +210,13 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
 
         public CompletableFuture<Void> setPlayerRank(UUID uuid, String rankId) {
             if (getRank(rankId) == null) return CompletableFuture.failedFuture(new IllegalArgumentException("Unknown rank."));
-            return plugin.put("player."+uuid, rankId.toLowerCase(Locale.ROOT)).thenRun(() -> plugin.applyRank(uuid));
+            return plugin.put("player."+uuid, rankId.toLowerCase(Locale.ROOT)).thenRun(() -> {
+                plugin.applyRank(uuid);
+                var registration = plugin.getServer().getServicesManager().getRegistration(AuditLogService.class);
+                if (registration != null && registration.getProvider() != null) {
+                    registration.getProvider().log(uuid.toString(), "RANK_CHANGE", uuid.toString(), "rank=" + rankId.toLowerCase(Locale.ROOT));
+                }
+            });
         }
 
         public CompletableFuture<String> getPlayerRank(UUID uuid) {

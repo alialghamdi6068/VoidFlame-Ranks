@@ -1,5 +1,7 @@
 package net.voidflame.ranks;
 
+import net.voidflame.core.storage.StorageService;
+
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -13,11 +15,9 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,10 +30,7 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
     private static final String GUI_PERMS = "§8Permissions";
     private static final String GUI_TESTER = "§8Rank Tester";
 
-    private Object storage;
-    private Method put;
-    private Method get;
-    private Method query;
+    private StorageService storage;
     private RankService ranks;
     private final Map<UUID, ChatInput> inputs = new ConcurrentHashMap<>();
 
@@ -287,25 +284,11 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
         getLogger().info("VoidFlame-Ranks enabled.");
     }
 
-    private boolean connectStorage() {
-        try {
-            Class<?> type=Class.forName("net.voidflame.core.storage.StorageService");
-            RegisteredServiceProvider<?> reg=getServer().getServicesManager().getRegistration(type);
-            if(reg==null)return false;
-            storage=reg.getProvider();
-            put=type.getMethod("put",String.class,String.class,String.class);
-            get=type.getMethod("get",String.class,String.class);
-            query=type.getMethod("query",String.class,Object[].class);
-            return true;
-        } catch(ReflectiveOperationException e){ return false; }
-    }
+    private boolean connectStorage(){ var registration=getServer().getServicesManager().getRegistration(StorageService.class); if(registration==null)return false; storage=registration.getProvider(); return storage!=null; }
 
-    @SuppressWarnings("unchecked")
-    private CompletableFuture<Void> put(String key,String value){ try{return (CompletableFuture<Void>)put.invoke(storage,"ranks",key,value);}catch(ReflectiveOperationException e){return CompletableFuture.failedFuture(e);} }
-    @SuppressWarnings("unchecked")
-    private CompletableFuture<String> get(String key){ try{return (CompletableFuture<String>)get.invoke(storage,"ranks",key);}catch(ReflectiveOperationException e){return CompletableFuture.failedFuture(e);} }
-    @SuppressWarnings("unchecked")
-    private CompletableFuture<List<Map<String,Object>>> query(String sql,Object... args){ try{return (CompletableFuture<List<Map<String,Object>>>)query.invoke(storage,sql,args);}catch(ReflectiveOperationException e){return CompletableFuture.failedFuture(e);} }
+    private CompletableFuture<Void> put(String key,String value){ return storage.put("ranks",key,value); }
+    private CompletableFuture<String> get(String key){ return storage.get("ranks",key); }
+    private CompletableFuture<List<Map<String,Object>>> query(String sql,Object... args){ return storage.query(sql,args); }
 
     private final Map<UUID, List<org.bukkit.permissions.PermissionAttachment>> rankAttachments = new ConcurrentHashMap<>();
 

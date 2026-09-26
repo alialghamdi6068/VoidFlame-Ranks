@@ -110,12 +110,77 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
                     new Rank("member","Member","§7Member","",1,"mvp")
             );
             CompletableFuture<Void> f = CompletableFuture.completedFuture(null);
+            Map<String, Set<String>> defaultPermissions = defaultDuelPermissions();
             for (Rank rank : defaults) {
                 cache.put(rank.id(), rank);
                 f = f.thenCompose(v -> saveRank(rank));
+                Set<String> perms = defaultPermissions.get(rank.id());
+                if (perms != null && !perms.isEmpty()) {
+                    permissions.put(rank.id(), new LinkedHashSet<>(perms));
+                    f = f.thenCompose(v -> plugin.put("perm." + rank.id(), String.join("\n", perms)));
+                }
             }
             loaded = true;
             return f;
+        }
+
+        private Map<String, Set<String>> defaultDuelPermissions() {
+            Set<String> player = new LinkedHashSet<>(List.of(
+                    "voidflame.spawn",
+                    "voidflame.duel",
+                    "voidflame.duel.accept",
+                    "voidflame.queue",
+                    "voidflame.queue.unranked",
+                    "voidflame.spectate",
+                    "voidflame.stats",
+                    "voidflame.leaderboard",
+                    "voidflame.kits",
+                    "voidflame.party",
+                    "voidflame.report",
+                    "voidflame.settings"
+            ));
+            Set<String> vip = new LinkedHashSet<>(player);
+            vip.addAll(List.of("voidflame.duel.private", "voidflame.party.create", "voidflame.party.private"));
+            Set<String> helper = new LinkedHashSet<>(vip);
+            helper.addAll(List.of("voidflame.staff", "voidflame.staff.chat", "voidflame.spectate.others", "voidflame.report.view", "voidflame.report.handle"));
+            Set<String> mod = new LinkedHashSet<>(helper);
+            mod.addAll(List.of("voidflame.staffmode", "voidflame.staff.freeze", "voidflame.staff.vanish", "voidflame.duel.forceend", "voidflame.logs.view"));
+            Set<String> admin = new LinkedHashSet<>(mod);
+            admin.addAll(List.of("voidflame.arena.manage", "voidflame.kit.manage", "voidflame.duel.forcematch", "voidflame.elo.modify", "voidflame.player.rank", "voidflame.world.manage", "voidflame.logs.manage", "voidflame.reload"));
+            Set<String> developer = new LinkedHashSet<>(admin);
+            developer.addAll(List.of("voidflame.developer", "voidflame.debug", "voidflame.test", "voidflame.command.override"));
+            Set<String> manager = new LinkedHashSet<>(developer);
+            manager.addAll(List.of("voidflame.staff.manage", "voidflame.ranks.manage", "voidflame.security.manage", "voidflame.server.manage"));
+            Set<String> owner = new LinkedHashSet<>(manager);
+            owner.add("*");
+
+            Map<String, Set<String>> result = new HashMap<>();
+            result.put("member", player);
+            result.put("mvp", vip);
+            result.put("vip", vip);
+            result.put("jr_helper", helper);
+            result.put("helper", helper);
+            result.put("senior_helper", helper);
+            result.put("head_helper", helper);
+            result.put("jr_mod", mod);
+            result.put("mod", mod);
+            result.put("senior_mod", mod);
+            result.put("head_mod", mod);
+            result.put("jr_admin", admin);
+            result.put("admin", admin);
+            result.put("senior_admin", admin);
+            result.put("head_admin", admin);
+            result.put("jr_developer", developer);
+            result.put("developer", developer);
+            result.put("senior_developer", developer);
+            result.put("head_developer", developer);
+            result.put("jr_manager", manager);
+            result.put("manager", manager);
+            result.put("senior_manager", manager);
+            result.put("head_manager", manager);
+            result.put("co_owner", owner);
+            result.put("owner", owner);
+            return result;
         }
 
         public CompletableFuture<Void> saveRank(Rank rank) {
@@ -242,19 +307,40 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
     @SuppressWarnings("unchecked")
     private CompletableFuture<List<Map<String,Object>>> query(String sql,Object... args){ try{return (CompletableFuture<List<Map<String,Object>>>)query.invoke(storage,sql,args);}catch(ReflectiveOperationException e){return CompletableFuture.failedFuture(e);} }
 
+    private final Map<UUID, List<org.bukkit.permissions.PermissionAttachment>> rankAttachments = new ConcurrentHashMap<>();
+
     private void applyRank(UUID uuid) {
         Player p=Bukkit.getPlayer(uuid);
         if(p==null)return;
         ranks.getPlayerRank(uuid).thenAccept(id -> Bukkit.getScheduler().runTask(this,()->{
             Rank r=ranks.getRank(id);
             if(r==null)r=ranks.getRank("member");
+
+            List<org.bukkit.permissions.PermissionAttachment> old = rankAttachments.remove(uuid);
+            if (old != null) {
+                for (org.bukkit.permissions.PermissionAttachment attachment : old) p.removeAttachment(attachment);
+            }
+
             p.setDisplayName(ChatColor.translateAlternateColorCodes('&',r.prefix()+" "+p.getName()+r.suffix()));
-            p.getEffectivePermissions().forEach(x -> {});
-            for(String perm:ranks.effectivePermissions(r.id())) p.addAttachment(this,perm,true);
+
+            List<org.bukkit.permissions.PermissionAttachment> attachments = new ArrayList<>();
+            for(String perm:ranks.effectivePermissions(r.id())) {
+                org.bukkit.permissions.PermissionAttachment attachment = p.addAttachment(this, perm, true);
+                attachments.add(attachment);
+            }
+            rankAttachments.put(uuid, attachments);
         }));
     }
 
     @EventHandler public void onJoin(PlayerJoinEvent e) { applyRank(e.getPlayer().getUniqueId()); }
+
+    @EventHandler public void onQuit(org.bukkit.event.player.PlayerQuitEvent e) {
+        UUID uuid = e.getPlayer().getUniqueId();
+        List<org.bukkit.permissions.PermissionAttachment> old = rankAttachments.remove(uuid);
+        if (old != null) {
+            for (org.bukkit.permissions.PermissionAttachment attachment : old) e.getPlayer().removeAttachment(attachment);
+        }
+    }
 
     private void openMain(Player p) {
         Inventory inv=Bukkit.createInventory(null,27,GUI_MAIN);

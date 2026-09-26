@@ -272,10 +272,9 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
             if (!(sender instanceof Player p)) return true;
             if (!p.hasPermission("voidflame.ranks.admin")) { p.sendMessage("§cNo permission."); return true; }
             if (args.length >= 2 && args[0].equalsIgnoreCase("set")) {
-                Player target=Bukkit.getPlayerExact(args[1]);
-                if(target==null){p.sendMessage("§cPlayer must be online for this command.");return true;}
+                OfflinePlayer target=Bukkit.getOfflinePlayer(args[1]);
                 String id=args.length>=3?args[2]:"member";
-                ranks.setPlayerRank(target.getUniqueId(),id).thenRun(() -> Bukkit.getScheduler().runTask(this,()->{p.sendMessage("§aRank updated.");applyRank(target.getUniqueId());})).exceptionally(e->{p.sendMessage("§c"+root(e).getMessage());return null;});
+                ranks.setPlayerRank(target.getUniqueId(),id).thenRun(() -> Bukkit.getScheduler().runTask(this,()->{p.sendMessage("§aRank updated for §f"+target.getName()+"§a."); if(target.isOnline()) applyRank(target.getUniqueId());})).exceptionally(e->{p.sendMessage("§c"+root(e).getMessage());return null;});
                 return true;
             }
             openMain(p); return true;

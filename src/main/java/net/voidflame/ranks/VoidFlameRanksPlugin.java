@@ -400,7 +400,7 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
         }
         if(title.equals(GUI_PLAYERS)){
             if(e.getRawSlot()==53){openMain(p);return;}
-            List<Player> ps=new ArrayList<>(Bukkit.getOnlinePlayers().stream().sorted(Comparator.comparing(Player::getName,String.CASE_INSENSITIVE_ORDER)).toList());int s=e.getRawSlot();if(s>=0&&s<45&&s<ps.size()){Player target=ps.get(s);begin(p,new ChatInput(InputType.PLAYER_RANK,null,target.getName()),"Enter rank ID for "+target.getName()+".");}
+            List<Player> ps=new ArrayList<>();Bukkit.getOnlinePlayers().stream().sorted(Comparator.comparing(Player::getName,String.CASE_INSENSITIVE_ORDER)).forEach(ps::add);int s=e.getRawSlot();if(s>=0&&s<45&&s<ps.size()){Player target=ps.get(s);begin(p,new ChatInput(InputType.PLAYER_RANK,null,target.getName()),"Enter rank ID for "+target.getName()+".");}
             return;
         }
         if(title.equals(GUI_TESTER)){

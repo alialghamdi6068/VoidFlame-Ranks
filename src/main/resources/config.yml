@@ -1,3 +1,5 @@
 settings:
   enabled: true
   module: ranks
+
+# Rank palette: Owner purple, Managers gold, Developers blue/cyan, Admins red, Moderators gold/yellow, Helpers green, Premium cyan.

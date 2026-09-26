@@ -221,6 +221,17 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
 
         public Set<String> permissions(String rankId) { return Collections.unmodifiableSet(permissions.getOrDefault(rankId, Set.of())); }
 
+        public boolean wouldCreateCycle(String childId, String parentId) {
+            String current = parentId == null ? null : parentId.toLowerCase(Locale.ROOT);
+            Set<String> seen = new HashSet<>();
+            while (current != null && seen.add(current)) {
+                if (current.equalsIgnoreCase(childId)) return true;
+                Rank rank = getRank(current);
+                current = rank == null ? null : rank.parent();
+            }
+            return current != null;
+        }
+
         public Set<String> effectivePermissions(String rankId) {
             LinkedHashSet<String> result = new LinkedHashSet<>();
             Set<String> seen = new HashSet<>();
@@ -412,7 +423,7 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
                 case PREFIX -> update(p,in.rankId(),r->new Rank(r.id(),r.name(),value,r.suffix(),r.weight(),r.parent()));
                 case SUFFIX -> update(p,in.rankId(),r->new Rank(r.id(),r.name(),r.prefix(),value,r.weight(),r.parent()));
                 case WEIGHT -> { int n=Integer.parseInt(value); update(p,in.rankId(),r->new Rank(r.id(),r.name(),r.prefix(),r.suffix(),n,r.parent())); }
-                case PARENT -> { String parent=value.equalsIgnoreCase("none")?null:value.toLowerCase(Locale.ROOT); if(parent!=null&&ranks.getRank(parent)==null)throw new IllegalArgumentException("Unknown parent rank."); if(parent!=null&&parent.equals(in.rankId()))throw new IllegalArgumentException("A rank cannot inherit itself."); update(p,in.rankId(),r->new Rank(r.id(),r.name(),r.prefix(),r.suffix(),r.weight(),parent)); }
+                case PARENT -> { String parent=value.equalsIgnoreCase("none")?null:value.toLowerCase(Locale.ROOT); if(parent!=null&&ranks.getRank(parent)==null)throw new IllegalArgumentException("Unknown parent rank."); if(parent!=null&&ranks.wouldCreateCycle(in.rankId(), parent))throw new IllegalArgumentException("That parent would create an inheritance cycle."); update(p,in.rankId(),r->new Rank(r.id(),r.name(),r.prefix(),r.suffix(),r.weight(),parent)); }
                 case ADD_PERMISSION -> { List<String> x=new ArrayList<>(ranks.permissions(in.rankId()));x.add(value);ranks.setPermissions(in.rankId(),x).thenRun(()->{p.sendMessage("§aPermission added.");openPermissions(p,ranks.getRank(in.rankId()));}); }
                 case REMOVE_PERMISSION -> { List<String>x=new ArrayList<>(ranks.permissions(in.rankId()));x.removeIf(s->s.equalsIgnoreCase(value));ranks.setPermissions(in.rankId(),x).thenRun(()->openPermissions(p,ranks.getRank(in.rankId()))); }
                 case PLAYER_RANK -> { String id=value.toLowerCase(Locale.ROOT); if(ranks.getRank(id)==null)throw new IllegalArgumentException("Unknown rank."); Player target=Bukkit.getPlayer(in.playerId()); if(target==null)throw new IllegalArgumentException("Player is offline."); ranks.setPlayerRank(target.getUniqueId(),id).thenRun(()->{applyRank(target.getUniqueId());p.sendMessage("§aRank assigned.");openPlayers(p);}); }

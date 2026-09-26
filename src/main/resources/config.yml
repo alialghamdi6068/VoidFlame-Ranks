@@ -1,5 +1,37 @@
 settings:
   enabled: true
   module: ranks
+  default-rank: default
+  default-track: default
+  allow-offline-management: true
+  permission-discovery: true
+  plugin-visibility: true
+  contexts-enabled: true
+  inheritance-enabled: true
+  inheritance-max-depth: 16
+  gui-page-size: 45
+  save-on-change: true
 
-# Rank palette: Owner purple, Managers gold, Developers blue/cyan, Admins red, Moderators gold/yellow, Helpers green, Premium cyan.
+tracks:
+  default:
+    max-rank: member
+    allow-demotion: true
+    allow-promotion: true
+  staff:
+    max-rank: helper
+    allow-demotion: true
+    allow-promotion: true
+
+contexts:
+  enabled: true
+  world: true
+  server: true
+  permission: true
+
+permissions:
+  discovery:
+    enabled: true
+    cache-seconds: 300
+  plugin-visibility:
+    enabled: true
+    hidden-by-default: false

@@ -22,3 +22,5 @@ tasks.withType<JavaCompile>().configureEach {
 tasks.jar { archiveBaseName.set(project.name) }
 tasks.shadowJar { archiveBaseName.set(project.name); archiveClassifier.set("") }
 tasks.build { dependsOn(tasks.shadowJar) }
+
+// Core API source dependency is resolved from the movable `api` tag.

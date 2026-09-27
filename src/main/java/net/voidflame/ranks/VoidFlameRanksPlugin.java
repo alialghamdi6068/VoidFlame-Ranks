@@ -356,12 +356,22 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
         p.openInventory(inv);
     }
 
-    private void openRanks(Player p) {
+    private void openRanks(Player p) { openRanks(p, 1); }
+
+    private void openRanks(Player p, int page) {
         List<Rank> rs=new ArrayList<>(ranks.getRanks());
-        Inventory inv=Bukkit.createInventory(null,54,GUI_RANKS);
-        int slot=0;
-        for(Rank r:rs) { if(slot>=45)break; item(inv,slot++,Material.NAME_TAG,"§f"+r.name(),"§7ID: §f"+r.id(),"§7Weight: §f"+r.weight(),"§7Parent: §f"+(r.parent()==null?"None":r.parent()),"§8Click to edit"); }
+        int pageSize=Math.max(1, Math.min(45, getConfig().getInt("settings.gui-page-size",45)));
+        int pages=Math.max(1,(rs.size()+pageSize-1)/pageSize);
+        page=Math.max(1,Math.min(page,pages));
+        Inventory inv=Bukkit.createInventory(null,54,GUI_RANKS+" §7Page "+page);
+        int start=(page-1)*pageSize;
+        for(int i=0;i<pageSize && start+i<rs.size();i++){
+            Rank r=rs.get(start+i);
+            item(inv,i,Material.NAME_TAG,"§f"+r.name(),"§7ID: §f"+r.id(),"§7Weight: §f"+r.weight(),"§7Parent: §f"+(r.parent()==null?"None":r.parent()),"§8Click to edit");
+        }
+        if(page>1)item(inv,45,Material.ARROW,"§ePrevious");
         item(inv,49,Material.EMERALD,"§aCreate Rank","§7Click then type the name in chat.");
+        if(page<pages)item(inv,50,Material.ARROW,"§eNext");
         item(inv,53,Material.BARRIER,"§cBack");
         p.openInventory(inv);
     }
@@ -389,12 +399,23 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
         p.openInventory(inv);
     }
 
-    private void openPlayers(Player p) {
-        Inventory inv=Bukkit.createInventory(null,54,GUI_PLAYERS);
-        List<Player> players=new ArrayList<>(Bukkit.getOnlinePlayers());
-        players.sort(Comparator.comparing(Player::getName,String.CASE_INSENSITIVE_ORDER));
-        int slot=0;
-        for(Player target:players){if(slot>=45)break; item(inv,slot++,Material.PLAYER_HEAD,"§f"+target.getName(),"§7Click to assign a rank");}
+    private void openPlayers(Player p) { openPlayers(p,1); }
+
+    private void openPlayers(Player p, int page) {
+        List<OfflinePlayer> players=new ArrayList<>(Arrays.asList(Bukkit.getOfflinePlayers()));
+        players.removeIf(x -> x.getName()==null);
+        players.sort(Comparator.comparing(OfflinePlayer::getName,String.CASE_INSENSITIVE_ORDER));
+        int pageSize=Math.max(1,Math.min(45,getConfig().getInt("settings.gui-page-size",45)));
+        int pages=Math.max(1,(players.size()+pageSize-1)/pageSize);
+        page=Math.max(1,Math.min(page,pages));
+        Inventory inv=Bukkit.createInventory(null,54,GUI_PLAYERS+" §7Page "+page);
+        int start=(page-1)*pageSize;
+        for(int i=0;i<pageSize&&start+i<players.size();i++){
+            OfflinePlayer target=players.get(start+i);
+            item(inv,i,Material.PLAYER_HEAD,"§f"+target.getName(),"§7Click to assign a rank");
+        }
+        if(page>1)item(inv,45,Material.ARROW,"§ePrevious");
+        if(page<pages)item(inv,50,Material.ARROW,"§eNext");
         item(inv,53,Material.BARRIER,"§cBack");
         p.openInventory(inv);
     }
@@ -438,7 +459,7 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
                 case PARENT -> { String parent=value.equalsIgnoreCase("none")?null:value.toLowerCase(Locale.ROOT); if(parent!=null&&ranks.getRank(parent)==null)throw new IllegalArgumentException("Unknown parent rank."); if(parent!=null&&ranks.wouldCreateCycle(in.rankId(), parent))throw new IllegalArgumentException("That parent would create an inheritance cycle."); update(p,in.rankId(),r->new Rank(r.id(),r.name(),r.prefix(),r.suffix(),r.weight(),parent)); }
                 case ADD_PERMISSION -> { List<String> x=new ArrayList<>(ranks.permissions(in.rankId()));x.add(value);ranks.setPermissions(in.rankId(),x).thenRun(()->{p.sendMessage("§aPermission added.");openPermissions(p,ranks.getRank(in.rankId()));}); }
                 case REMOVE_PERMISSION -> { List<String>x=new ArrayList<>(ranks.permissions(in.rankId()));x.removeIf(s->s.equalsIgnoreCase(value));ranks.setPermissions(in.rankId(),x).thenRun(()->openPermissions(p,ranks.getRank(in.rankId()))); }
-                case PLAYER_RANK -> { String id=value.toLowerCase(Locale.ROOT); if(ranks.getRank(id)==null)throw new IllegalArgumentException("Unknown rank."); Player target=Bukkit.getPlayer(in.playerId()); if(target==null)throw new IllegalArgumentException("Player is offline."); ranks.setPlayerRank(target.getUniqueId(),id).thenRun(()->{applyRank(target.getUniqueId());p.sendMessage("§aRank assigned.");openPlayers(p);}); }
+                case PLAYER_RANK -> { String id=value.toLowerCase(Locale.ROOT); if(ranks.getRank(id)==null)throw new IllegalArgumentException("Unknown rank."); OfflinePlayer target=Bukkit.getOfflinePlayer(in.playerId()); if(target.getName()==null)throw new IllegalArgumentException("Player has no known profile."); ranks.setPlayerRank(target.getUniqueId(),id).thenRun(()->{applyRank(target.getUniqueId());p.sendMessage("§aRank assigned.");openPlayers(p);}); }
             }
         } catch(Exception ex){p.sendMessage("§c"+root(ex).getMessage());}
     }
@@ -460,10 +481,17 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
             else if(e.getRawSlot()==22) { if(ranks.getRank("member")!=null)openPermissions(p,ranks.getRank("member")); }
             return;
         }
-        if(title.equals(GUI_RANKS)){
+        if(title.startsWith(GUI_RANKS)){
+            int page=parsePage(title);
             if(e.getRawSlot()==49){begin(p,new ChatInput(InputType.CREATE_RANK,null,null),"Enter the new rank name.");return;}
             if(e.getRawSlot()==53){openMain(p);return;}
-            List<Rank> rs=new ArrayList<>(ranks.getRanks()); int s=e.getRawSlot(); if(s>=0&&s<45&&s<rs.size())openRankEditor(p,rs.get(s)); return;
+            if(e.getRawSlot()==45){openRanks(p,page-1);return;}
+            if(e.getRawSlot()==50){openRanks(p,page+1);return;}
+            List<Rank> rs=new ArrayList<>(ranks.getRanks());
+            int pageSize=Math.max(1,Math.min(45,getConfig().getInt("settings.gui-page-size",45)));
+            int index=(page-1)*pageSize+e.getRawSlot();
+            if(e.getRawSlot()>=0&&e.getRawSlot()<pageSize&&index<rs.size())openRankEditor(p,rs.get(index));
+            return;
         }
         if(title.startsWith("§8Edit:")){
             String name=ChatColor.stripColor(title).substring("Edit: ".length());
@@ -489,9 +517,20 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
             List<String> ps=new ArrayList<>(ranks.permissions(r.id()));int s=e.getRawSlot();if(s>=0&&s<45&&s<ps.size()){begin(p,new ChatInput(InputType.REMOVE_PERMISSION,r.id(),null),"Type the exact permission to remove: "+ps.get(s));}
             return;
         }
-        if(title.equals(GUI_PLAYERS)){
+        if(title.startsWith(GUI_PLAYERS)){
+            int page=parsePage(title);
             if(e.getRawSlot()==53){openMain(p);return;}
-            List<Player> ps=new ArrayList<>();Bukkit.getOnlinePlayers().stream().sorted(Comparator.comparing(Player::getName,String.CASE_INSENSITIVE_ORDER)).forEach(ps::add);int s=e.getRawSlot();if(s>=0&&s<45&&s<ps.size()){Player target=ps.get(s);begin(p,new ChatInput(InputType.PLAYER_RANK,null,target.getName()),"Enter rank ID for "+target.getName()+".");}
+            if(e.getRawSlot()==45){openPlayers(p,page-1);return;}
+            if(e.getRawSlot()==50){openPlayers(p,page+1);return;}
+            List<OfflinePlayer> ps=new ArrayList<>(Arrays.asList(Bukkit.getOfflinePlayers()));
+            ps.removeIf(x -> x.getName()==null);
+            ps.sort(Comparator.comparing(OfflinePlayer::getName,String.CASE_INSENSITIVE_ORDER));
+            int pageSize=Math.max(1,Math.min(45,getConfig().getInt("settings.gui-page-size",45)));
+            int index=(page-1)*pageSize+e.getRawSlot();
+            if(e.getRawSlot()>=0&&e.getRawSlot()<pageSize&&index<ps.size()){
+                OfflinePlayer target=ps.get(index);
+                begin(p,new ChatInput(InputType.PLAYER_RANK,null,target.getName()),"Enter rank ID for "+target.getName()+".");
+            }
             return;
         }
         if(title.equals(GUI_TESTER)){
@@ -499,6 +538,13 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
             if(e.getRawSlot()==11){openRanks(p);return;}
             if(e.getRawSlot()==15){openPlayers(p);return;}
         }
+    }
+
+    private int parsePage(String title) {
+        int marker=title.lastIndexOf("Page ");
+        if(marker<0)return 1;
+        try{return Math.max(1,Integer.parseInt(ChatColor.stripColor(title.substring(marker+5)).trim()));}
+        catch(NumberFormatException ignored){return 1;}
     }
 
     private void item(Inventory inv,int slot,Material material,String name,String... lore){

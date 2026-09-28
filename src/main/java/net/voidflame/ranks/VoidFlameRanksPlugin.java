@@ -149,7 +149,7 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
 
         public CompletableFuture<Void> deleteRank(String id) {
             Rank r = getRank(id);
-            if (r == null || "member".equals(r.id())) return CompletableFuture.failedFuture(new IllegalArgumentException("This rank cannot be deleted."));
+            if (r == null || "player".equals(r.id())) return CompletableFuture.failedFuture(new IllegalArgumentException("This rank cannot be deleted."));
             String safe = id.toLowerCase(Locale.ROOT);
             cache.remove(safe);
             permissions.remove(safe);
@@ -180,7 +180,7 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
         }
 
         public CompletableFuture<String> getPlayerRank(UUID uuid) {
-            return plugin.get("player."+uuid).thenApply(v -> v == null ? "member" : v.toLowerCase(Locale.ROOT));
+            return plugin.get("player."+uuid).thenApply(v -> v == null ? "player" : v.toLowerCase(Locale.ROOT));
         }
 
         public CompletableFuture<Void> setPermissions(String rankId, Collection<String> values) {
@@ -218,7 +218,7 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
 
         public String display(Player player, String rankId) {
             Rank r = getRank(rankId);
-            if (r == null) r = getRank("member");
+            if (r == null) r = getRank("player");
             return color(r.prefix()) + " " + color(player.getName()) + color(r.suffix());
         }
 
@@ -256,7 +256,7 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
             if (!p.hasPermission("voidflame.ranks.admin")) { p.sendMessage("§cNo permission."); return true; }
             if (args.length >= 2 && args[0].equalsIgnoreCase("set")) {
                 OfflinePlayer target=Bukkit.getOfflinePlayer(args[1]);
-                String id=args.length>=3?args[2]:"member";
+                String id=args.length>=3?args[2]:"player";
                 ranks.setPlayerRank(target.getUniqueId(),id).thenRun(() -> Bukkit.getScheduler().runTask(this,()->{p.sendMessage("§aRank updated for §f"+target.getName()+"§a."); if(target.isOnline()) applyRank(target.getUniqueId());})).exceptionally(e->{p.sendMessage("§c"+root(e).getMessage());return null;});
                 return true;
             }

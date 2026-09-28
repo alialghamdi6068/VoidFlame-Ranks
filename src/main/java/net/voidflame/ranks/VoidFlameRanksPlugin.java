@@ -81,31 +81,15 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
 
         private CompletableFuture<Void> createDefaults() {
             List<Rank> defaults = List.of(
-                    new Rank("owner","Owner","§4Owner","",1000,null),
-                    new Rank("co_owner","Co Owner","§cCo Owner","",950,"owner"),
-                    new Rank("head_manager","Head Manager","§cHead Manager","",900,"co_owner"),
-                    new Rank("senior_manager","Senior Manager","§6Senior Manager","",850,"head_manager"),
-                    new Rank("manager","Manager","§6Manager","",800,"senior_manager"),
-                    new Rank("jr_manager","Jr Manager","§eJr Manager","",750,"manager"),
-                    new Rank("head_developer","Head Developer","§bHead Developer","",700,"jr_manager"),
-                    new Rank("senior_developer","Senior Developer","§3Senior Developer","",650,"head_developer"),
-                    new Rank("developer","Developer","§3Developer","",600,"senior_developer"),
-                    new Rank("jr_developer","Jr Developer","§bJr Developer","",550,"developer"),
-                    new Rank("head_admin","Head Admin","§cHead Admin","",500,"jr_developer"),
-                    new Rank("senior_admin","Senior Admin","§cSenior Admin","",450,"head_admin"),
-                    new Rank("admin","Admin","§cAdmin","",400,"senior_admin"),
-                    new Rank("jr_admin","Jr Admin","§eJr Admin","",350,"admin"),
-                    new Rank("head_mod","Head Mod","§9Head Mod","",300,"jr_admin"),
-                    new Rank("senior_mod","Senior Mod","§9Senior Mod","",250,"head_mod"),
-                    new Rank("mod","Mod","§9Mod","",200,"senior_mod"),
-                    new Rank("jr_mod","Jr Mod","§bJr Mod","",150,"mod"),
-                    new Rank("head_helper","Head Helper","§aHead Helper","",120,"jr_mod"),
-                    new Rank("senior_helper","Senior Helper","§2Senior Helper","",100,"head_helper"),
-                    new Rank("helper","Helper","§aHelper","",80,"senior_helper"),
-                    new Rank("jr_helper","Jr Helper","§aJr Helper","",60,"helper"),
-                    new Rank("vip","VIP","§6VIP","",20,"jr_helper"),
-                    new Rank("mvp","MVP","§dMVP","",10,"vip"),
-                    new Rank("member","Member","§7Member","",1,"mvp")
+                    new Rank("owner","Owner","§5Owner","",900,null),
+                    new Rank("manager","Manager","§6Manager","",800,"owner"),
+                    new Rank("developer","Developer","§bDeveloper","",700,"manager"),
+                    new Rank("admin","Admin","§cAdmin","",600,"developer"),
+                    new Rank("moderator","Moderator","§9Moderator","",500,"admin"),
+                    new Rank("helper","Helper","§aHelper","",400,"moderator"),
+                    new Rank("mvp","MVP","§dMVP","",300,"helper"),
+                    new Rank("vip","VIP","§6VIP","",200,"mvp"),
+                    new Rank("player","Player","§7Player","",100,null)
             );
             CompletableFuture<Void> f = CompletableFuture.completedFuture(null);
             Map<String, Set<String>> defaultPermissions = defaultDuelPermissions();
@@ -124,59 +108,35 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
 
         private Map<String, Set<String>> defaultDuelPermissions() {
             Set<String> player = new LinkedHashSet<>(List.of(
-                    "voidflame.spawn",
-                    "voidflame.duel",
-                    "voidflame.duel.accept",
-                    "voidflame.queue",
-                    "voidflame.queue.unranked",
-                    "voidflame.spectate",
-                    "voidflame.stats",
-                    "voidflame.leaderboard",
-                    "voidflame.kits",
-                    "voidflame.party",
-                    "voidflame.report",
-                    "voidflame.settings"
+                    "voidflame.spawn","voidflame.duel","voidflame.duel.accept","voidflame.queue",
+                    "voidflame.spectate","voidflame.stats","voidflame.leaderboard","voidflame.kits",
+                    "voidflame.party","voidflame.report","voidflame.settings"
             ));
             Set<String> vip = new LinkedHashSet<>(player);
-            vip.addAll(List.of("voidflame.duel.private", "voidflame.party.create", "voidflame.party.private"));
-            Set<String> helper = new LinkedHashSet<>(vip);
-            helper.addAll(List.of("voidflame.staff", "voidflame.staff.chat", "voidflame.spectate.others", "voidflame.report.view", "voidflame.report.handle"));
-            Set<String> mod = new LinkedHashSet<>(helper);
-            mod.addAll(List.of("voidflame.staffmode", "voidflame.staff.freeze", "voidflame.staff.vanish", "voidflame.duel.forceend", "voidflame.logs.view"));
-            Set<String> admin = new LinkedHashSet<>(mod);
-            admin.addAll(List.of("voidflame.arena.manage", "voidflame.kit.manage", "voidflame.duel.forcematch", "voidflame.elo.modify", "voidflame.player.rank", "voidflame.world.manage", "voidflame.logs.manage", "voidflame.reload"));
+            vip.addAll(List.of("voidflame.duel.private","voidflame.party.create","voidflame.party.private"));
+            Set<String> mvp = new LinkedHashSet<>(vip);
+            Set<String> helper = new LinkedHashSet<>(mvp);
+            helper.addAll(List.of("voidflame.staff","voidflame.staff.chat","voidflame.spectate.others","voidflame.report.view","voidflame.report.handle"));
+            Set<String> moderator = new LinkedHashSet<>(helper);
+            moderator.addAll(List.of("voidflame.staffmode","voidflame.staff.freeze","voidflame.staff.vanish","voidflame.duel.forceend","voidflame.logs.view"));
+            Set<String> admin = new LinkedHashSet<>(moderator);
+            admin.addAll(List.of("voidflame.arena.manage","voidflame.kit.manage","voidflame.duel.forcematch","voidflame.elo.modify","voidflame.player.rank","voidflame.world.manage","voidflame.logs.manage","voidflame.reload"));
             Set<String> developer = new LinkedHashSet<>(admin);
-            developer.addAll(List.of("voidflame.developer", "voidflame.debug", "voidflame.test", "voidflame.command.override"));
+            developer.addAll(List.of("voidflame.developer","voidflame.debug","voidflame.test","voidflame.command.override"));
             Set<String> manager = new LinkedHashSet<>(developer);
-            manager.addAll(List.of("voidflame.staff.manage", "voidflame.ranks.manage", "voidflame.security.manage", "voidflame.server.manage"));
+            manager.addAll(List.of("voidflame.staff.manage","voidflame.ranks.manage","voidflame.security.manage","voidflame.server.manage"));
             Set<String> owner = new LinkedHashSet<>(manager);
             owner.add("*");
 
             Map<String, Set<String>> result = new HashMap<>();
-            result.put("member", player);
-            result.put("mvp", vip);
+            result.put("player", player);
             result.put("vip", vip);
-            result.put("jr_helper", helper);
+            result.put("mvp", mvp);
             result.put("helper", helper);
-            result.put("senior_helper", helper);
-            result.put("head_helper", helper);
-            result.put("jr_mod", mod);
-            result.put("mod", mod);
-            result.put("senior_mod", mod);
-            result.put("head_mod", mod);
-            result.put("jr_admin", admin);
+            result.put("moderator", moderator);
             result.put("admin", admin);
-            result.put("senior_admin", admin);
-            result.put("head_admin", admin);
-            result.put("jr_developer", developer);
             result.put("developer", developer);
-            result.put("senior_developer", developer);
-            result.put("head_developer", developer);
-            result.put("jr_manager", manager);
             result.put("manager", manager);
-            result.put("senior_manager", manager);
-            result.put("head_manager", manager);
-            result.put("co_owner", owner);
             result.put("owner", owner);
             return result;
         }

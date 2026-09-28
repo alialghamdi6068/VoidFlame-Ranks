@@ -1,7 +1,7 @@
 settings:
   enabled: true
   module: ranks
-  default-rank: default
+  default-rank: player
   default-track: default
   allow-offline-management: true
   permission-discovery: true
@@ -14,7 +14,7 @@ settings:
 
 tracks:
   default:
-    max-rank: member
+    max-rank: player
     allow-demotion: true
     allow-promotion: true
   staff:

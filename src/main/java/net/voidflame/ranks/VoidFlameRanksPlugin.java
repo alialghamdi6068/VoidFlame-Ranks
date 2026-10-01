@@ -409,7 +409,7 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
                 case CREATE_RANK -> {
                     String id=value.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9_]+","_");
                     if(ranks.getRank(id)!=null) throw new IllegalArgumentException("Rank already exists.");
-                    ranks.saveRank(new Rank(id,value,"&7"+value,"",Math.max(2,ranks.getRanks().stream().mapToInt(Rank::weight).min().orElse(1)-1),"member"))
+                    ranks.saveRank(new Rank(id,value,"&7"+value,"",Math.max(2,ranks.getRanks().stream().mapToInt(Rank::weight).min().orElse(1)-1),"player"))
                             .thenRun(()->Bukkit.getScheduler().runTask(this,()->{p.sendMessage("§aRank created.");openRanks(p);}));
                 }
                 case RENAME -> update(p,in.rankId(),r->new Rank(r.id(),value,r.prefix(),r.suffix(),r.weight(),r.parent()));
@@ -438,7 +438,7 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
             if(e.getRawSlot()==11)openRanks(p);
             else if(e.getRawSlot()==13)openPlayers(p);
             else if(e.getRawSlot()==15)openTester(p);
-            else if(e.getRawSlot()==22) { if(ranks.getRank("member")!=null)openPermissions(p,ranks.getRank("member")); }
+            else if(e.getRawSlot()==22) { if(ranks.getRank("player")!=null)openPermissions(p,ranks.getRank("player")); }
             return;
         }
         if(title.startsWith(GUI_RANKS)){
@@ -464,7 +464,7 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
                 case 19->begin(p,new ChatInput(InputType.PARENT,r.id(),null),"Enter parent rank ID or none.");
                 case 21->openPermissions(p,r);
                 case 23->openPlayers(p);
-                case 31->{ if(r.id().equals("member")){p.sendMessage("§cMember cannot be deleted.");return;} ranks.deleteRank(r.id()).thenRun(()->Bukkit.getScheduler().runTask(this,()->{p.sendMessage("§aRank deleted.");openRanks(p);})); }
+                case 31->{ if(r.id().equals("player")){p.sendMessage("§cPlayer rank cannot be deleted.");return;} ranks.deleteRank(r.id()).thenRun(()->Bukkit.getScheduler().runTask(this,()->{p.sendMessage("§aRank deleted.");openRanks(p);})); }
                 case 35->openRanks(p);
             }
             return;

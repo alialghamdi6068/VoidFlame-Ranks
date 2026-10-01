@@ -1,16 +1,94 @@
+# ================================================================
+# VoidFlame Ranks • Production Configuration
+# Paper 26.2 • Java 25
+# ================================================================
+# This file controls rank defaults, inheritance, permissions discovery,
+# GUI sizing and persistence behavior.
+#
+# Rank colors/prefixes are intentionally configurable here instead of
+# being hard-coded in Java. Existing database ranks remain authoritative;
+# these defaults are used when no stored ranks exist yet.
+
 settings:
   enabled: true
   module: ranks
+
+  # Player defaults
   default-rank: player
   default-track: default
   allow-offline-management: true
+
+  # Permission / inheritance engine
   permission-discovery: true
   plugin-visibility: true
   contexts-enabled: true
   inheritance-enabled: true
   inheritance-max-depth: 16
+
+  # GUI
   gui-page-size: 45
   save-on-change: true
+
+# ================================================================
+# Default rank catalog
+# Edit prefix/suffix/weight/parent here before first database creation.
+# Color codes use Minecraft legacy '&' codes.
+# ================================================================
+ranks:
+  owner:
+    name: Owner
+    prefix: "&5Owner"
+    suffix: ""
+    weight: 900
+    parent: null
+  manager:
+    name: Manager
+    prefix: "&6Manager"
+    suffix: ""
+    weight: 800
+    parent: owner
+  developer:
+    name: Developer
+    prefix: "&bDeveloper"
+    suffix: ""
+    weight: 700
+    parent: manager
+  admin:
+    name: Admin
+    prefix: "&cAdmin"
+    suffix: ""
+    weight: 600
+    parent: developer
+  moderator:
+    name: Moderator
+    prefix: "&9Moderator"
+    suffix: ""
+    weight: 500
+    parent: admin
+  helper:
+    name: Helper
+    prefix: "&aHelper"
+    suffix: ""
+    weight: 400
+    parent: moderator
+  mvp:
+    name: MVP
+    prefix: "&dMVP"
+    suffix: ""
+    weight: 300
+    parent: helper
+  vip:
+    name: VIP
+    prefix: "&6VIP"
+    suffix: ""
+    weight: 200
+    parent: mvp
+  player:
+    name: Player
+    prefix: "&7Player"
+    suffix: ""
+    weight: 100
+    parent: null
 
 tracks:
   default:
@@ -35,4 +113,10 @@ permissions:
   plugin-visibility:
     enabled: true
     hidden-by-default: false
-# maintenance: final integration build against latest VoidFlame-Core
+
+# ================================================================
+# Notes
+# - Rank assignments and edited ranks are stored in VoidFlame-Core DB.
+# - /vfranks reload is intentionally not required for rank changes.
+# - Keep owner/manager/developer/admin ordering aligned with weights.
+# ================================================================

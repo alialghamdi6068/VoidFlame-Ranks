@@ -82,17 +82,7 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
         }
 
         private CompletableFuture<Void> createDefaults() {
-            List<Rank> defaults = List.of(
-                    new Rank("owner","Owner","§5Owner","",900,null),
-                    new Rank("manager","Manager","§6Manager","",800,"owner"),
-                    new Rank("developer","Developer","§bDeveloper","",700,"manager"),
-                    new Rank("admin","Admin","§cAdmin","",600,"developer"),
-                    new Rank("moderator","Moderator","§9Moderator","",500,"admin"),
-                    new Rank("helper","Helper","§aHelper","",400,"moderator"),
-                    new Rank("mvp","MVP","§dMVP","",300,"helper"),
-                    new Rank("vip","VIP","§6VIP","",200,"mvp"),
-                    new Rank("player","Player","§7Player","",100,null)
-            );
+            List<Rank> defaults = configuredDefaults();
             CompletableFuture<Void> f = CompletableFuture.completedFuture(null);
             Map<String, Set<String>> defaultPermissions = defaultDuelPermissions();
             for (Rank rank : defaults) {
@@ -106,6 +96,39 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
             }
             loaded = true;
             return f;
+        }
+
+        private List<Rank> configuredDefaults() {
+            var section = plugin.getConfig().getConfigurationSection("ranks");
+            if (section == null) {
+                return List.of(
+                        new Rank("owner","Owner","§5Owner","",900,null),
+                        new Rank("manager","Manager","§6Manager","",800,"owner"),
+                        new Rank("developer","Developer","§bDeveloper","",700,"manager"),
+                        new Rank("admin","Admin","§cAdmin","",600,"developer"),
+                        new Rank("moderator","Moderator","§9Moderator","",500,"admin"),
+                        new Rank("helper","Helper","§aHelper","",400,"moderator"),
+                        new Rank("mvp","MVP","§dMVP","",300,"helper"),
+                        new Rank("vip","VIP","§6VIP","",200,"mvp"),
+                        new Rank("player","Player","§7Player","",100,null)
+                );
+            }
+            List<Rank> defaults = new ArrayList<>();
+            for (String id : section.getKeys(false)) {
+                var rank = section.getConfigurationSection(id);
+                if (rank == null) continue;
+                String name = rank.getString("name", id);
+                String prefix = rank.getString("prefix", "&7" + name);
+                String suffix = rank.getString("suffix", "");
+                int weight = rank.getInt("weight", 100);
+                String parent = rank.getString("parent", null);
+                defaults.add(new Rank(id, name, prefix, suffix, weight, parent));
+            }
+            defaults.sort(Comparator.comparingInt(Rank::weight).reversed());
+            if (defaults.stream().noneMatch(r -> r.id().equalsIgnoreCase("player"))) {
+                defaults.add(new Rank("player", "Player", "&7Player", "", 100, null));
+            }
+            return defaults;
         }
 
         private Map<String, Set<String>> defaultDuelPermissions() {

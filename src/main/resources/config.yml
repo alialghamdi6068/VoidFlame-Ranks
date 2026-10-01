@@ -35,3 +35,4 @@ permissions:
   plugin-visibility:
     enabled: true
     hidden-by-default: false
+# maintenance: final integration build against latest VoidFlame-Core

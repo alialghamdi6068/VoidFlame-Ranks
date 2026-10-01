@@ -49,6 +49,7 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
         private final VoidFlameRanksPlugin plugin;
         private final Map<String, Rank> cache = new ConcurrentHashMap<>();
         private final Map<String, Set<String>> permissions = new ConcurrentHashMap<>();
+        private final Map<UUID, String> playerRanks = new ConcurrentHashMap<>();
         private volatile boolean loaded;
 
         RankService(VoidFlameRanksPlugin plugin) { this.plugin = plugin; }
@@ -58,6 +59,7 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
         public Rank getRank(String id) { return cache.get(id.toLowerCase(Locale.ROOT)); }
 
         public CompletableFuture<Void> load() {
+            playerRanks.clear();
             return plugin.query("SELECT data_key, data_value FROM module_data WHERE module='ranks'")
                     .thenCompose(rows -> {
                         cache.clear();
@@ -170,7 +172,9 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
 
         public CompletableFuture<Void> setPlayerRank(UUID uuid, String rankId) {
             if (getRank(rankId) == null) return CompletableFuture.failedFuture(new IllegalArgumentException("Unknown rank."));
-            return plugin.put("player."+uuid, rankId.toLowerCase(Locale.ROOT)).thenRun(() -> {
+            String normalized = rankId.toLowerCase(Locale.ROOT);
+            return plugin.put("player."+uuid, normalized).thenRun(() -> {
+                playerRanks.put(uuid, normalized);
                 plugin.applyRank(uuid);
                 var registration = plugin.getServer().getServicesManager().getRegistration(AuditLogService.class);
                 if (registration != null && registration.getProvider() != null) {
@@ -180,7 +184,17 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
         }
 
         public CompletableFuture<String> getPlayerRank(UUID uuid) {
-            return plugin.get("player."+uuid).thenApply(v -> v == null ? "player" : v.toLowerCase(Locale.ROOT));
+            String cached = playerRanks.get(uuid);
+            if (cached != null) return CompletableFuture.completedFuture(cached);
+            return plugin.get("player."+uuid).thenApply(v -> {
+                String normalized = v == null ? "player" : v.toLowerCase(Locale.ROOT);
+                playerRanks.put(uuid, normalized);
+                return normalized;
+            });
+        }
+
+        public String getPlayerRankCached(UUID uuid) {
+            return playerRanks.getOrDefault(uuid, "player");
         }
 
         public CompletableFuture<Void> setPermissions(String rankId, Collection<String> values) {

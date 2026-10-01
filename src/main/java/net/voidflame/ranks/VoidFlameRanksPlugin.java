@@ -279,7 +279,7 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
         if(p==null)return;
         ranks.getPlayerRank(uuid).thenAccept(id -> Bukkit.getScheduler().runTask(this,()->{
             Rank r=ranks.getRank(id);
-            if(r==null)r=ranks.getRank("member");
+            if(r==null)r=ranks.getRank("player");
 
             List<org.bukkit.permissions.PermissionAttachment> old = rankAttachments.remove(uuid);
             if (old != null) {

@@ -12,13 +12,16 @@ commands:
   ranks:
     description: Open the VoidFlame rank management GUI.
     usage: /ranks
-    permission: voidflame.ranks.admin
+    permission: voidflame.ranks.manage
   rank:
     description: Manage ranks and player assignments.
     usage: /rank [set <player> <rank>]
     permission: voidflame.ranks.admin
 
 permissions:
+  voidflame.ranks.manage:
+    description: Manage ranks, rank permissions and player assignments within hierarchy.
+    default: false
   voidflame.ranks.admin:
-    description: Full access to VoidFlame rank management.
+    description: Legacy alias for full rank management.
     default: op

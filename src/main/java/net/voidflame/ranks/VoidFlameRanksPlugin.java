@@ -531,10 +531,25 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
         ranks.saveRank(fn.apply(r)).thenRun(()->Bukkit.getScheduler().runTask(this,()->{p.sendMessage("§aSaved.");openRankEditor(p,ranks.getRank(id));}));
     }
 
+    @EventHandler public void onDrag(org.bukkit.event.inventory.InventoryDragEvent e) {
+        if (!(e.getWhoClicked() instanceof Player)) return;
+        String title = e.getView().getTitle();
+        if (isRanksGui(title)) e.setCancelled(true);
+    }
+
+    private boolean isRanksGui(String title) {
+        return title.equals(GUI_MAIN)
+                || title.startsWith(GUI_RANKS)
+                || title.startsWith("§8Edit:")
+                || title.startsWith(GUI_PERMS)
+                || title.startsWith(GUI_PLAYERS)
+                || title.equals(GUI_TESTER);
+    }
+
     @EventHandler public void onClick(InventoryClickEvent e) {
         if(!(e.getWhoClicked() instanceof Player p)||e.getClickedInventory()==null)return;
         String title=e.getView().getTitle();
-        if(!(title.equals(GUI_MAIN)||title.equals(GUI_RANKS)||title.startsWith("§8Edit:")||title.startsWith(GUI_PERMS)||title.equals(GUI_PLAYERS)||title.equals(GUI_TESTER)))return;
+        if(!isRanksGui(title))return;
         e.setCancelled(true);
         if(title.equals(GUI_MAIN)){
             if(e.getRawSlot()==31){p.closeInventory();return;}

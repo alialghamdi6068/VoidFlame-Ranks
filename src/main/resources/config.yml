@@ -243,14 +243,20 @@ rank-permissions:
     - voidflame.kit.preview
   jr_helper:
     - voidflame.staff
+    - voidflame.staff.basic
+    - voidflame.staff.players
     - voidflame.staff.chat
   helper:
+    - voidflame.staff.manage
     - voidflame.spectate.others
     - voidflame.report.view
     - voidflame.report.handle
   sr_helper:
+    - voidflame.staff.moderate
     - voidflame.staffmode
   head_helper:
+    - voidflame.staff.admin
+    - voidflame.staff.server
     - voidflame.staffmode.chat
   jr_mod:
     - voidflame.staff.freeze

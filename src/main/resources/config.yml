@@ -332,6 +332,7 @@ rank-permissions:
   head_manager:
     - voidflame.admin.full
   co_owner:
+    - voidflame.admin.full
     - voidflame.owner.delegate
   owner:
     - "*"

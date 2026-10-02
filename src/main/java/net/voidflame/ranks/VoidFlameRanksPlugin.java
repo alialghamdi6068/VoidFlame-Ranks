@@ -178,17 +178,19 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
 
         private CompletableFuture<Void> ensureCanonicalRanks() {
             List<Rank> defaults = configuredDefaults();
-            CompletableFuture<Void> chain = migrateLegacyPlayerRank();
+            Map<String, Set<String>> configuredPermissions = defaultDuelPermissions();
+            CompletableFuture<Void> chain = CompletableFuture.completedFuture(null);
             for (Rank rank : defaults) {
                 if (getRank(rank.id()) == null) {
                     chain = chain.thenCompose(v -> saveRank(rank));
                 }
-                Set<String> configured = defaultDuelPermissions().get(rank.id());
+                Set<String> configured = configuredPermissions.get(rank.id());
                 if (configured != null && permissions.getOrDefault(rank.id(), Set.of()).isEmpty()) {
                     permissions.put(rank.id(), new LinkedHashSet<>(configured));
                     chain = chain.thenCompose(v -> plugin.put("perm." + rank.id(), String.join("\n", configured)));
                 }
             }
+            chain = chain.thenCompose(v -> migrateLegacyPlayerRank());
             loaded = true;
             return chain;
         }

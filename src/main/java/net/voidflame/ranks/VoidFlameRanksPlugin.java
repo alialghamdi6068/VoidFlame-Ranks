@@ -93,8 +93,7 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
                     f = f.thenCompose(v -> plugin.put("perm." + rank.id(), String.join("\n", perms)));
                 }
             }
-            loaded = true;
-            return f;
+            return f.whenComplete((ignored, error) -> loaded = error == null);
         }
 
         private List<Rank> configuredDefaults() {
@@ -191,8 +190,7 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
                 }
             }
             chain = chain.thenCompose(v -> migrateLegacyPlayerRank());
-            loaded = true;
-            return chain;
+            return chain.whenComplete((ignored, error) -> loaded = error == null);
         }
 
         public CompletableFuture<Void> saveRank(Rank rank) {
@@ -227,7 +225,7 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
             String normalized = rankId.toLowerCase(Locale.ROOT);
             return plugin.put("player."+uuid, normalized).thenRun(() -> {
                 playerRanks.put(uuid, normalized);
-                plugin.applyRank(uuid);
+                Bukkit.getScheduler().runTask(plugin, () -> plugin.applyRank(uuid));
                 var registration = plugin.getServer().getServicesManager().getRegistration(AuditLogService.class);
                 if (registration != null && registration.getProvider() != null) {
                     registration.getProvider().log(uuid.toString(), "RANK_CHANGE", uuid.toString(), "rank=" + rankId.toLowerCase(Locale.ROOT));

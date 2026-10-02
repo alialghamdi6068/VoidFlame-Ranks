@@ -241,6 +241,21 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
             return current != null;
         }
 
+        public boolean canManageRank(UUID actor, String targetRankId) {
+            String actorId = getPlayerRankCached(actor);
+            Rank actorRank = getRank(actorId);
+            Rank targetRank = getRank(targetRankId);
+            if (actorRank == null || targetRank == null) return false;
+            return actorRank.id().equals("owner") || actorRank.weight() > targetRank.weight();
+        }
+
+        public boolean canManagePlayer(UUID actor, UUID target) {
+            Rank actorRank = getRank(getPlayerRankCached(actor));
+            Rank targetRank = getRank(getPlayerRankCached(target));
+            if (actorRank == null || targetRank == null) return false;
+            return actorRank.id().equals("owner") || actorRank.weight() > targetRank.weight();
+        }
+
         public Set<String> effectivePermissions(String rankId) {
             LinkedHashSet<String> result = new LinkedHashSet<>();
             Set<String> seen = new HashSet<>();
@@ -294,6 +309,8 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
             if (args.length >= 2 && args[0].equalsIgnoreCase("set")) {
                 OfflinePlayer target=Bukkit.getOfflinePlayer(args[1]);
                 String id=args.length>=3?args[2]:"player";
+                if (!ranks.canManageRank(p.getUniqueId(), id)) { p.sendMessage("§cYou cannot assign a rank at or above your own hierarchy."); return true; }
+                if (!ranks.canManagePlayer(p.getUniqueId(), target.getUniqueId())) { p.sendMessage("§cYou cannot modify a player with an equal or higher rank."); return true; }
                 ranks.setPlayerRank(target.getUniqueId(),id).thenRun(() -> Bukkit.getScheduler().runTask(this,()->{p.sendMessage("§aRank updated for §f"+target.getName()+"§a."); if(target.isOnline()) applyRank(target.getUniqueId());})).exceptionally(e->{p.sendMessage("§c"+root(e).getMessage());return null;});
                 return true;
             }
@@ -442,6 +459,9 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
     private void handleInput(Player p, ChatInput in, String value) {
         if(value.equalsIgnoreCase("cancel")){p.sendMessage("§7Cancelled.");openMain(p);return;}
         try {
+            if (in.rankId() != null && !ranks.canManageRank(p.getUniqueId(), in.rankId())) {
+                throw new IllegalArgumentException("You cannot modify a rank at or above your own hierarchy.");
+            }
             switch(in.type()) {
                 case CREATE_RANK -> {
                     String id=value.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9_]+","_");
@@ -456,7 +476,7 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
                 case PARENT -> { String parent=value.equalsIgnoreCase("none")?null:value.toLowerCase(Locale.ROOT); if(parent!=null&&ranks.getRank(parent)==null)throw new IllegalArgumentException("Unknown parent rank."); if(parent!=null&&ranks.wouldCreateCycle(in.rankId(), parent))throw new IllegalArgumentException("That parent would create an inheritance cycle."); update(p,in.rankId(),r->new Rank(r.id(),r.name(),r.prefix(),r.suffix(),r.weight(),parent)); }
                 case ADD_PERMISSION -> { List<String> x=new ArrayList<>(ranks.permissions(in.rankId()));x.add(value);ranks.setPermissions(in.rankId(),x).thenRun(()->{p.sendMessage("§aPermission added.");openPermissions(p,ranks.getRank(in.rankId()));}); }
                 case REMOVE_PERMISSION -> { List<String>x=new ArrayList<>(ranks.permissions(in.rankId()));x.removeIf(s->s.equalsIgnoreCase(value));ranks.setPermissions(in.rankId(),x).thenRun(()->openPermissions(p,ranks.getRank(in.rankId()))); }
-                case PLAYER_RANK -> { String id=value.toLowerCase(Locale.ROOT); if(ranks.getRank(id)==null)throw new IllegalArgumentException("Unknown rank."); OfflinePlayer target=Bukkit.getOfflinePlayer(in.playerId()); if(target.getName()==null)throw new IllegalArgumentException("Player has no known profile."); ranks.setPlayerRank(target.getUniqueId(),id).thenRun(()->{applyRank(target.getUniqueId());p.sendMessage("§aRank assigned.");openPlayers(p);}); }
+                case PLAYER_RANK -> { String id=value.toLowerCase(Locale.ROOT); if(ranks.getRank(id)==null)throw new IllegalArgumentException("Unknown rank."); if(!ranks.canManageRank(p.getUniqueId(),id))throw new IllegalArgumentException("You cannot assign a rank at or above your own hierarchy."); OfflinePlayer target=Bukkit.getOfflinePlayer(in.playerId()); if(target.getName()==null)throw new IllegalArgumentException("Player has no known profile."); if(!ranks.canManagePlayer(p.getUniqueId(),target.getUniqueId()))throw new IllegalArgumentException("You cannot modify a player with an equal or higher rank."); ranks.setPlayerRank(target.getUniqueId(),id).thenRun(()->{applyRank(target.getUniqueId());p.sendMessage("§aRank assigned.");openPlayers(p);}); }
             }
         } catch(Exception ex){p.sendMessage("§c"+root(ex).getMessage());}
     }

@@ -264,21 +264,47 @@ rank-permissions:
     - voidflame.player.punish
   jr_admin:
     - voidflame.admin
+    - voidflame.admin.duels
+    - voidflame.admin.kits
+    - voidflame.admin.arenas
+    - voidflame.admin.queues
+    - voidflame.admin.ffa
+    - voidflame.admin.rewards
+    - voidflame.admin.players
+    - voidflame.admin.settings
     - voidflame.arena.manage
     - voidflame.kit.manage
     - voidflame.world.manage
   admin:
+    - voidflame.admin.ranks
+    - voidflame.admin.menus
+    - voidflame.admin.logs
     - voidflame.duel.forcematch
     - voidflame.elo.modify
     - voidflame.player.rank
     - voidflame.logs.manage
   sr_admin:
+    - voidflame.admin.security
+    - voidflame.admin.database
     - voidflame.server.manage
     - voidflame.database.manage
     - voidflame.database.manage
   head_admin:
     - voidflame.admin
     - voidflame.admin.full
+    - voidflame.admin.duels
+    - voidflame.admin.kits
+    - voidflame.admin.arenas
+    - voidflame.admin.queues
+    - voidflame.admin.ffa
+    - voidflame.admin.rewards
+    - voidflame.admin.ranks
+    - voidflame.admin.players
+    - voidflame.admin.menus
+    - voidflame.admin.logs
+    - voidflame.admin.settings
+    - voidflame.admin.security
+    - voidflame.admin.database
     - voidflame.security.manage
   jr_dev:
     - voidflame.developer

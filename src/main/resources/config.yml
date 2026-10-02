@@ -47,132 +47,132 @@ ranks:
     prefix: "&#A855F7C&#9333E8o &#7E22C8O&#6D28D9w&#8B5CF6n&#A855F7e&#9333E8r"
     suffix: ""
     weight: 2400
-    parent: owner
+    parent: manager
 
   head_manager:
     name: Head Manager
     prefix: "&#FFD166H&#F5C451e&#E9B949a&#DDAF3Bd &#D4A72Cm&#C99B1De&#BD8F0Fn&#B88300a&#FFD166g&#F5C451e&#E9B949r"
     suffix: ""
     weight: 2300
-    parent: co_owner
+    parent: sr_manager
   sr_manager:
     name: Sr Manager
     prefix: "&#FFD166S&#F5C451r &#E9B949M&#DDAF3Aa&#D4A72Cn&#C99B1Da&#BD8F0Fg&#B88300e&#FFD166r"
     suffix: ""
     weight: 2200
-    parent: head_manager
+    parent: manager
   manager:
     name: Manager
     prefix: "&#FFD166M&#F5C451a&#E9B949n&#DDAF3Aa&#D4A72Cg&#C99B1De&#BD8F0Fr"
     suffix: ""
     weight: 2100
-    parent: sr_manager
+    parent: jr_manager
   jr_manager:
     name: Jr Manager
     prefix: "&#FFD166J&#F5C451r &#E9B949M&#DDAF3Aa&#D4A72Cn&#C99B1Da&#BD8F0Fg&#B88300e&#FFD166r"
     suffix: ""
     weight: 2000
-    parent: manager
+    parent: member
 
   head_dev:
     name: Head Dev
     prefix: "&#67E8F9H&#52D6E8e&#3FC4D8a&#2EB2C8d &#1FA9D2D&#3CB8E9e&#67E8F9v"
     suffix: ""
     weight: 1900
-    parent: member
+    parent: sr_dev
   sr_dev:
     name: Sr Dev
     prefix: "&#67E8F9S&#52D6E8r &#3FC4D8D&#2EB2C8e&#1FA9D2Dv"
     suffix: ""
     weight: 1800
-    parent: head_dev
+    parent: dev
   dev:
     name: Dev
     prefix: "&#67E8F9D&#52D6E8e&#3FC4D8v"
     suffix: ""
     weight: 1700
-    parent: sr_dev
+    parent: jr_dev
   jr_dev:
     name: Jr Dev
     prefix: "&#67E8F9J&#52D6E8r &#3FC4D8D&#2EB2C8e&#1FA9D2Dv"
     suffix: ""
     weight: 1600
-    parent: dev
+    parent: member
 
   head_admin:
     name: Head Admin
     prefix: "&#FF6B6BH&#F05454e&#E83E3Ea&#DC2626d &#C81E1Ee&#DC2626r&#EF4444m&#F87171i&#FF6B6Bn"
     suffix: ""
     weight: 1500
-    parent: member
+    parent: sr_admin
   sr_admin:
     name: Sr Admin
     prefix: "&#FF6B6BS&#F05454r &#E83E3EA&#DC2626d&#C81E1Em&#EF4444i&#F87171n"
     suffix: ""
     weight: 1400
-    parent: head_admin
+    parent: admin
   admin:
     name: Admin
     prefix: "&#FF6B6BA&#F05454d&#E83E3Em&#DC2626i&#C81E1En"
     suffix: ""
     weight: 1300
-    parent: sr_admin
+    parent: jr_admin
   jr_admin:
     name: Jr Admin
     prefix: "&#FF6B6BJ&#F05454r &#E83E3EA&#DC2626d&#C81E1Em&#EF4444i&#F87171n"
     suffix: ""
     weight: 1200
-    parent: admin
+    parent: member
 
   head_mod:
     name: Head Mod
     prefix: "&#60A5FAH&#4F8FEAe&#3F7BDEa&#3367C6d &#2F64D6M&#3B82F6o&#60A5FAd"
     suffix: ""
     weight: 1100
-    parent: member
+    parent: sr_mod
   sr_mod:
     name: Sr Mod
     prefix: "&#60A5FAS&#4F8FEAr &#3F7BDEM&#3367C6o&#2F64D6d"
     suffix: ""
     weight: 1000
-    parent: head_mod
+    parent: mod
   mod:
     name: Mod
     prefix: "&#60A5FAM&#4F8FEAo&#3F7BDEd"
     suffix: ""
     weight: 900
-    parent: sr_mod
+    parent: jr_mod
   jr_mod:
     name: Jr Mod
     prefix: "&#60A5FAJ&#4F8FEAr &#3F7BDEM&#3367C6o&#2F64D6d"
     suffix: ""
     weight: 800
-    parent: mod
+    parent: member
 
   head_helper:
     name: Head Helper
     prefix: "&#4ADE80H&#3DD879e&#35C972a&#2DBB6Bd &#24B76EH&#34C759e&#4ADE80l&#67E8A4p&#86EFACe&#A7F3D0r"
     suffix: ""
     weight: 700
-    parent: member
+    parent: sr_helper
   sr_helper:
     name: Sr Helper
     prefix: "&#4ADE80S&#3DD879r &#35C972H&#2DBB6Ee&#24B76El&#34C759p&#4ADE80e&#67E8A4r"
     suffix: ""
     weight: 600
-    parent: head_helper
+    parent: helper
   helper:
     name: Helper
     prefix: "&#4ADE80H&#3DD879e&#35C972l&#2DBB6Ep&#34C759e&#4ADE80r"
     suffix: ""
     weight: 500
-    parent: sr_helper
+    parent: jr_helper
   jr_helper:
     name: Jr Helper
     prefix: "&#4ADE80J&#3DD879r &#35C972H&#2DBB6Ee&#34C759l&#4ADE80p&#67E8A4e&#86EFACr"
     suffix: ""
     weight: 400
-    parent: helper
+    parent: member
 
   mvp:
     name: MVP

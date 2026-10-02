@@ -344,7 +344,7 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
         ranks = new RankService(this);
         getServer().getServicesManager().register(RankService.class, ranks, this, ServicePriority.High);
         getServer().getPluginManager().registerEvents(this, this);
-        getCommand("ranks").setExecutor((sender, command, label, args) -> { if (!(sender instanceof Player p)) return true; if (!p.hasPermission("voidflame.ranks.admin")) { p.sendMessage("§cNo permission."); return true; } openMain(p); return true; });
+        getCommand("ranks").setExecutor((sender, command, label, args) -> { if (!(sender instanceof Player p)) return true; if (!p.hasPermission("voidflame.ranks.admin") && !p.hasPermission("voidflame.ranks.manage")) { p.sendMessage("§cNo permission."); return true; } openMain(p); return true; });
         getCommand("rank").setExecutor((sender, command, label, args) -> {
             if (!(sender instanceof Player p)) return true;
             if (!p.hasPermission("voidflame.ranks.admin")) { p.sendMessage("§cNo permission."); return true; }
@@ -433,6 +433,7 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
     }
 
     private void openRankEditor(Player p, Rank r) {
+        if (!ranks.canManageRank(p.getUniqueId(), r.id())) { p.sendMessage("§cYou cannot edit a rank at or above your own hierarchy."); return; }
         Inventory inv=Bukkit.createInventory(null,36,"§8Edit: "+r.name());
         item(inv,10,Material.NAME_TAG,"§bName","§7"+r.name(),"§8Click to rename");
         item(inv,12,Material.PAPER,"§bPrefix","§7"+r.prefix(),"§8Click to change");
@@ -447,6 +448,7 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
     }
 
     private void openPermissions(Player p, Rank r) {
+        if (!ranks.canManageRank(p.getUniqueId(), r.id())) { p.sendMessage("§cYou cannot edit permissions for a rank at or above your own hierarchy."); return; }
         Inventory inv=Bukkit.createInventory(null,54,GUI_PERMS+" §f"+r.name());
         int slot=0;
         for(String perm:ranks.permissions(r.id())) { if(slot>=45)break; item(inv,slot++,Material.PAPER,"§f"+perm,"§8Click to remove"); }

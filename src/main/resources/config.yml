@@ -79,7 +79,7 @@ ranks:
     prefix: "&#67E8F9H&#52D6E8e&#3FC4D8a&#2EB2C8d &#1FA9D2D&#3CB8E9e&#67E8F9v"
     suffix: ""
     weight: 1900
-    parent: jr_manager
+    parent: member
   sr_dev:
     name: Sr Dev
     prefix: "&#67E8F9S&#52D6E8r &#3FC4D8D&#2EB2C8e&#1FA9D2Dv"
@@ -104,7 +104,7 @@ ranks:
     prefix: "&#FF6B6BH&#F05454e&#E83E3Ea&#DC2626d &#C81E1Ee&#DC2626r&#EF4444m&#F87171i&#FF6B6Bn"
     suffix: ""
     weight: 1500
-    parent: jr_dev
+    parent: member
   sr_admin:
     name: Sr Admin
     prefix: "&#FF6B6BS&#F05454r &#E83E3EA&#DC2626d&#C81E1Em&#EF4444i&#F87171n"
@@ -129,7 +129,7 @@ ranks:
     prefix: "&#60A5FAH&#4F8FEAe&#3F7BDEa&#3367C6d &#2F64D6M&#3B82F6o&#60A5FAd"
     suffix: ""
     weight: 1100
-    parent: jr_admin
+    parent: member
   sr_mod:
     name: Sr Mod
     prefix: "&#60A5FAS&#4F8FEAr &#3F7BDEM&#3367C6o&#2F64D6d"
@@ -154,7 +154,7 @@ ranks:
     prefix: "&#4ADE80H&#3DD879e&#35C972a&#2DBB6Bd &#24B76EH&#34C759e&#4ADE80l&#67E8A4p&#86EFACe&#A7F3D0r"
     suffix: ""
     weight: 700
-    parent: jr_mod
+    parent: member
   sr_helper:
     name: Sr Helper
     prefix: "&#4ADE80S&#3DD879r &#35C972H&#2DBB6Ee&#24B76El&#34C759p&#4ADE80e&#67E8A4r"
@@ -179,13 +179,13 @@ ranks:
     prefix: "&#E879F9M&#D66BE8V&#C45BD8P"
     suffix: ""
     weight: 300
-    parent: jr_helper
+    parent: member
   vip:
     name: VIP
     prefix: "&#FDE68AV&#F5D76EI&#EFC94CV&#E9B93B"
     suffix: ""
     weight: 200
-    parent: mvp
+    parent: member
   member:
     name: Member
     prefix: "&#D1D5DBM&#C4CAD1e&#B8BFm&#AEB4BBe&#9CA3AFr"
@@ -263,6 +263,7 @@ rank-permissions:
   head_mod:
     - voidflame.player.punish
   jr_admin:
+    - voidflame.admin
     - voidflame.arena.manage
     - voidflame.kit.manage
     - voidflame.world.manage
@@ -274,8 +275,10 @@ rank-permissions:
   sr_admin:
     - voidflame.server.manage
     - voidflame.database.manage
+    - voidflame.database.manage
   head_admin:
     - voidflame.admin
+    - voidflame.admin.full
     - voidflame.security.manage
   jr_dev:
     - voidflame.developer

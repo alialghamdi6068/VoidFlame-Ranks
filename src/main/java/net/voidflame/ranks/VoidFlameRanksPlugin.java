@@ -166,11 +166,11 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
             CompletableFuture<Void> chain = plugin.query(
                     "UPDATE module_data SET data_value=? WHERE module='ranks' AND data_key LIKE 'player.%' AND data_value=?",
                     "member", "player"
-            );
+            ).thenApply(rows -> null);
             chain = chain.thenCompose(v -> plugin.query(
                     "DELETE FROM module_data WHERE module='ranks' AND data_key IN (?,?)",
                     "rank.player", "perm.player"
-            ));
+            ).thenApply(rows -> null));
             cache.remove("player");
             permissions.remove("player");
             return chain;

@@ -76,8 +76,7 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
                             }
                         }
                         if (cache.isEmpty()) return createDefaults();
-                        loaded = true;
-                        return CompletableFuture.completedFuture(null);
+                        return ensureCanonicalRanks();
                     });
         }
 
@@ -132,38 +131,50 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
         }
 
         private Map<String, Set<String>> defaultDuelPermissions() {
-            Set<String> player = new LinkedHashSet<>(List.of(
-                    "voidflame.spawn","voidflame.duel","voidflame.duel.accept","voidflame.queue",
-                    "voidflame.spectate","voidflame.stats","voidflame.leaderboard","voidflame.kits",
-                    "voidflame.party","voidflame.report","voidflame.settings"
-            ));
-            Set<String> vip = new LinkedHashSet<>(player);
-            vip.addAll(List.of("voidflame.duel.private","voidflame.party.create","voidflame.party.private"));
-            Set<String> mvp = new LinkedHashSet<>(vip);
-            Set<String> helper = new LinkedHashSet<>(mvp);
-            helper.addAll(List.of("voidflame.staff","voidflame.staff.chat","voidflame.spectate.others","voidflame.report.view","voidflame.report.handle"));
-            Set<String> moderator = new LinkedHashSet<>(helper);
-            moderator.addAll(List.of("voidflame.staffmode","voidflame.staff.freeze","voidflame.staff.vanish","voidflame.duel.forceend","voidflame.logs.view"));
-            Set<String> admin = new LinkedHashSet<>(moderator);
-            admin.addAll(List.of("voidflame.arena.manage","voidflame.kit.manage","voidflame.duel.forcematch","voidflame.elo.modify","voidflame.player.rank","voidflame.world.manage","voidflame.logs.manage","voidflame.reload"));
-            Set<String> developer = new LinkedHashSet<>(admin);
-            developer.addAll(List.of("voidflame.developer","voidflame.debug","voidflame.test","voidflame.command.override"));
-            Set<String> manager = new LinkedHashSet<>(developer);
-            manager.addAll(List.of("voidflame.staff.manage","voidflame.ranks.manage","voidflame.security.manage","voidflame.server.manage"));
-            Set<String> owner = new LinkedHashSet<>(manager);
-            owner.add("*");
-
             Map<String, Set<String>> result = new HashMap<>();
-            result.put("player", player);
-            result.put("vip", vip);
-            result.put("mvp", mvp);
-            result.put("helper", helper);
-            result.put("moderator", moderator);
-            result.put("admin", admin);
-            result.put("developer", developer);
-            result.put("manager", manager);
-            result.put("owner", owner);
+            var section = plugin.getConfig().getConfigurationSection("rank-permissions");
+            if (section == null) return result;
+            for (String id : section.getKeys(false)) {
+                LinkedHashSet<String> values = new LinkedHashSet<>();
+                for (String permission : section.getStringList(id)) {
+                    if (permission != null && !permission.isBlank()) values.add(permission.toLowerCase(Locale.ROOT));
+                }
+                result.put(id.toLowerCase(Locale.ROOT), values);
+            }
             return result;
+        }
+
+        private CompletableFuture<Void> migrateLegacyPlayerRank() {
+            if (getRank("member") == null || getRank("player") == null) return CompletableFuture.completedFuture(null);
+            Rank member = getRank("member");
+            CompletableFuture<Void> chain = plugin.query(
+                    "UPDATE module_data SET data_value=? WHERE module='ranks' AND data_key LIKE 'player.%' AND data_value=?",
+                    "member", "player"
+            );
+            chain = chain.thenCompose(v -> plugin.query(
+                    "DELETE FROM module_data WHERE module='ranks' AND data_key IN (?,?)",
+                    "rank.player", "perm.player"
+            ));
+            cache.remove("player");
+            permissions.remove("player");
+            return chain;
+        }
+
+        private CompletableFuture<Void> ensureCanonicalRanks() {
+            List<Rank> defaults = configuredDefaults();
+            CompletableFuture<Void> chain = migrateLegacyPlayerRank();
+            for (Rank rank : defaults) {
+                if (getRank(rank.id()) == null) {
+                    chain = chain.thenCompose(v -> saveRank(rank));
+                }
+                Set<String> configured = defaultDuelPermissions().get(rank.id());
+                if (configured != null && permissions.getOrDefault(rank.id(), Set.of()).isEmpty()) {
+                    permissions.put(rank.id(), new LinkedHashSet<>(configured));
+                    chain = chain.thenCompose(v -> plugin.put("perm." + rank.id(), String.join("\n", configured)));
+                }
+            }
+            loaded = true;
+            return chain;
         }
 
         public CompletableFuture<Void> saveRank(Rank rank) {

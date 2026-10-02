@@ -101,15 +101,31 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
             var section = plugin.getConfig().getConfigurationSection("ranks");
             if (section == null) {
                 return List.of(
-                        new Rank("owner","Owner","§5Owner","",900,null),
-                        new Rank("manager","Manager","§6Manager","",800,"owner"),
-                        new Rank("developer","Developer","§bDeveloper","",700,"manager"),
-                        new Rank("admin","Admin","§cAdmin","",600,"developer"),
-                        new Rank("moderator","Moderator","§9Moderator","",500,"admin"),
-                        new Rank("helper","Helper","§aHelper","",400,"moderator"),
-                        new Rank("mvp","MVP","§dMVP","",300,"helper"),
-                        new Rank("vip","VIP","§6VIP","",200,"mvp"),
-                        new Rank("player","Player","§7Player","",100,null)
+                        new Rank("owner","Owner","&#A855F7Owner","",2500,null),
+                        new Rank("co_owner","Co Owner","&#A855F7Co Owner","",2400,"owner"),
+                        new Rank("head_manager","Head Manager","&#FFD166Head Manager","",2300,"co_owner"),
+                        new Rank("sr_manager","Sr Manager","&#FFD166Sr Manager","",2200,"head_manager"),
+                        new Rank("manager","Manager","&#FFD166Manager","",2100,"sr_manager"),
+                        new Rank("jr_manager","Jr Manager","&#FFD166Jr Manager","",2000,"manager"),
+                        new Rank("head_dev","Head Dev","&#67E8F9Head Dev","",1900,"jr_manager"),
+                        new Rank("sr_dev","Sr Dev","&#67E8F9Sr Dev","",1800,"head_dev"),
+                        new Rank("dev","Dev","&#67E8F9Dev","",1700,"sr_dev"),
+                        new Rank("jr_dev","Jr Dev","&#67E8F9Jr Dev","",1600,"dev"),
+                        new Rank("head_admin","Head Admin","&#FF6B6BHead Admin","",1500,"jr_dev"),
+                        new Rank("sr_admin","Sr Admin","&#FF6B6BSr Admin","",1400,"head_admin"),
+                        new Rank("admin","Admin","&#FF6B6BAdmin","",1300,"sr_admin"),
+                        new Rank("jr_admin","Jr Admin","&#FF6B6BJr Admin","",1200,"admin"),
+                        new Rank("head_mod","Head Mod","&#60A5FAHead Mod","",1100,"jr_admin"),
+                        new Rank("sr_mod","Sr Mod","&#60A5FASr Mod","",1000,"head_mod"),
+                        new Rank("mod","Mod","&#60A5FAMod","",900,"sr_mod"),
+                        new Rank("jr_mod","Jr Mod","&#60A5FAJr Mod","",800,"mod"),
+                        new Rank("head_helper","Head Helper","&#4ADE80Head Helper","",700,"jr_mod"),
+                        new Rank("sr_helper","Sr Helper","&#4ADE80Sr Helper","",600,"head_helper"),
+                        new Rank("helper","Helper","&#4ADE80Helper","",500,"sr_helper"),
+                        new Rank("jr_helper","Jr Helper","&#4ADE80Jr Helper","",400,"helper"),
+                        new Rank("mvp","MVP","&#E879F9MVP","",300,"jr_helper"),
+                        new Rank("vip","VIP","&#FDE68AVIP","",200,"mvp"),
+                        new Rank("member","Member","&#D1D5DBMember","",100,null)
                 );
             }
             List<Rank> defaults = new ArrayList<>();
@@ -124,8 +140,8 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
                 defaults.add(new Rank(id, name, prefix, suffix, weight, parent));
             }
             defaults.sort(Comparator.comparingInt(Rank::weight).reversed());
-            if (defaults.stream().noneMatch(r -> r.id().equalsIgnoreCase("player"))) {
-                defaults.add(new Rank("player", "Player", "&7Player", "", 100, null));
+            if (defaults.stream().noneMatch(r -> r.id().equalsIgnoreCase("member"))) {
+                defaults.add(new Rank("member", "Member", "&#D1D5DBMember", "", 100, null));
             }
             return defaults;
         }
@@ -300,7 +316,20 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
 
         private static String b64(String s) { return Base64.getEncoder().encodeToString(s.getBytes(java.nio.charset.StandardCharsets.UTF_8)); }
         private static String unb64(String s) { return new String(Base64.getDecoder().decode(s), java.nio.charset.StandardCharsets.UTF_8); }
-        private static String color(String s) { return ChatColor.translateAlternateColorCodes('&', s == null ? "" : s); }
+        private static String color(String s) {
+            if (s == null) return "";
+            String value = s;
+            java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("&#[A-Fa-f0-9]{6}").matcher(value);
+            StringBuffer out = new StringBuffer();
+            while (matcher.find()) {
+                String hex = matcher.group().substring(2);
+                StringBuilder legacy = new StringBuilder("§x");
+                for (char c : hex.toCharArray()) legacy.append('§').append(c);
+                matcher.appendReplacement(out, java.util.regex.Matcher.quoteReplacement(legacy.toString()));
+            }
+            matcher.appendTail(out);
+            return ChatColor.translateAlternateColorCodes('&', out.toString());
+        }
     }
 
     @Override public void onEnable() {

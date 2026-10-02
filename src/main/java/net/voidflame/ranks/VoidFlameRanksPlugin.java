@@ -239,14 +239,14 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
             String cached = playerRanks.get(uuid);
             if (cached != null) return CompletableFuture.completedFuture(cached);
             return plugin.get("player."+uuid).thenApply(v -> {
-                String normalized = v == null ? "player" : v.toLowerCase(Locale.ROOT);
+                String normalized = v == null ? "member" : v.toLowerCase(Locale.ROOT);
                 playerRanks.put(uuid, normalized);
                 return normalized;
             });
         }
 
         public String getPlayerRankCached(UUID uuid) {
-            return playerRanks.getOrDefault(uuid, "player");
+            return playerRanks.getOrDefault(uuid, "member");
         }
 
         public CompletableFuture<Void> setPermissions(String rankId, Collection<String> values) {
@@ -299,7 +299,7 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
 
         public String display(Player player, String rankId) {
             Rank r = getRank(rankId);
-            if (r == null) r = getRank("player");
+            if (r == null) r = getRank("member");
             return color(r.prefix()) + " " + color(player.getName()) + color(r.suffix());
         }
 
@@ -347,7 +347,7 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
         getCommand("ranks").setExecutor((sender, command, label, args) -> { if (!(sender instanceof Player p)) return true; if (!p.hasPermission("voidflame.ranks.admin") && !p.hasPermission("voidflame.ranks.manage")) { p.sendMessage("§cNo permission."); return true; } openMain(p); return true; });
         getCommand("rank").setExecutor((sender, command, label, args) -> {
             if (!(sender instanceof Player p)) return true;
-            if (!p.hasPermission("voidflame.ranks.admin")) { p.sendMessage("§cNo permission."); return true; }
+            if (!p.hasPermission("voidflame.ranks.admin") && !p.hasPermission("voidflame.ranks.manage")) { p.sendMessage("§cNo permission."); return true; }
             if (args.length >= 2 && args[0].equalsIgnoreCase("set")) {
                 OfflinePlayer target=Bukkit.getOfflinePlayer(args[1]);
                 String id=args.length>=3?args[2]:"player";
@@ -375,7 +375,7 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
         if(p==null)return;
         ranks.getPlayerRank(uuid).thenAccept(id -> Bukkit.getScheduler().runTask(this,()->{
             Rank r=ranks.getRank(id);
-            if(r==null)r=ranks.getRank("player");
+            if(r==null)r=ranks.getRank("member");
 
             List<org.bukkit.permissions.PermissionAttachment> old = rankAttachments.remove(uuid);
             if (old != null) {
@@ -404,11 +404,14 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
     }
 
     private void openMain(Player p) {
-        Inventory inv=Bukkit.createInventory(null,27,GUI_MAIN);
-        item(inv,11,Material.NAME_TAG,"§bRanks","§7Manage server ranks.");
-        item(inv,13,Material.PLAYER_HEAD,"§aPlayers","§7Manage player ranks.");
-        item(inv,15,Material.COMPARATOR,"§eRank Tester","§7Inspect effective permissions.");
-        item(inv,22,Material.BOOK,"§dPermissions","§7Manage rank permissions.");
+        Inventory inv=Bukkit.createInventory(null,45,GUI_MAIN);
+        fill(inv, Material.BLACK_STAINED_GLASS_PANE);
+        item(inv,4,Material.NETHER_STAR,"§5§lVOIDFLAME RANKS","§7Central rank & permission management","§8Hierarchy • Permissions • Players");
+        item(inv,11,Material.NAME_TAG,"§d§lRANKS","§7Manage the complete rank hierarchy.","§8Create • Edit • Delete • Weight • Parent");
+        item(inv,13,Material.PLAYER_HEAD,"§b§lPLAYERS","§7Assign ranks to players safely.","§8Equal/higher ranks are protected");
+        item(inv,15,Material.COMPARATOR,"§e§lRANK TESTER","§7Inspect effective permissions.","§8See inherited permissions");
+        item(inv,22,Material.BOOK,"§5§lPERMISSIONS","§7Manage direct permissions.","§8Changes are persisted through Core");
+        item(inv,31,Material.BARRIER,"§c§lCLOSE","§7Close this menu.");
         p.openInventory(inv);
     }
 
@@ -510,7 +513,7 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
                 case CREATE_RANK -> {
                     String id=value.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9_]+","_");
                     if(ranks.getRank(id)!=null) throw new IllegalArgumentException("Rank already exists.");
-                    ranks.saveRank(new Rank(id,value,"&7"+value,"",Math.max(2,ranks.getRanks().stream().mapToInt(Rank::weight).min().orElse(1)-1),"player"))
+                    ranks.saveRank(new Rank(id,value,"&7"+value,"",Math.max(2,ranks.getRanks().stream().mapToInt(Rank::weight).min().orElse(1)-1),"member"))
                             .thenRun(()->Bukkit.getScheduler().runTask(this,()->{p.sendMessage("§aRank created.");openRanks(p);}));
                 }
                 case RENAME -> update(p,in.rankId(),r->new Rank(r.id(),value,r.prefix(),r.suffix(),r.weight(),r.parent()));
@@ -536,10 +539,11 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
         if(!(title.equals(GUI_MAIN)||title.equals(GUI_RANKS)||title.startsWith("§8Edit:")||title.startsWith(GUI_PERMS)||title.equals(GUI_PLAYERS)||title.equals(GUI_TESTER)))return;
         e.setCancelled(true);
         if(title.equals(GUI_MAIN)){
+            if(e.getRawSlot()==31){p.closeInventory();return;}
             if(e.getRawSlot()==11)openRanks(p);
             else if(e.getRawSlot()==13)openPlayers(p);
             else if(e.getRawSlot()==15)openTester(p);
-            else if(e.getRawSlot()==22) { if(ranks.getRank("player")!=null)openPermissions(p,ranks.getRank("player")); }
+            else if(e.getRawSlot()==22) { if(ranks.getRank("member")!=null)openPermissions(p,ranks.getRank("member")); }
             return;
         }
         if(title.startsWith(GUI_RANKS)){
@@ -565,7 +569,7 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
                 case 19->begin(p,new ChatInput(InputType.PARENT,r.id(),null),"Enter parent rank ID or none.");
                 case 21->openPermissions(p,r);
                 case 23->openPlayers(p);
-                case 31->{ if(r.id().equals("player")){p.sendMessage("§cPlayer rank cannot be deleted.");return;} ranks.deleteRank(r.id()).thenRun(()->Bukkit.getScheduler().runTask(this,()->{p.sendMessage("§aRank deleted.");openRanks(p);})); }
+                case 31->{ if(r.id().equals("member") || r.id().equals("owner")){p.sendMessage("§cThis protected rank cannot be deleted.");return;} ranks.deleteRank(r.id()).thenRun(()->Bukkit.getScheduler().runTask(this,()->{p.sendMessage("§aRank deleted.");openRanks(p);})); }
                 case 35->openRanks(p);
             }
             return;
@@ -606,6 +610,17 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
         if(marker<0)return 1;
         try{return Math.max(1,Integer.parseInt(ChatColor.stripColor(title.substring(marker+5)).trim()));}
         catch(NumberFormatException ignored){return 1;}
+    }
+
+    private void fill(Inventory inv, Material material) {
+        ItemStack pane = itemStack(material, " ");
+        for (int i=0;i<inv.getSize();i++) inv.setItem(i,pane.clone());
+    }
+    private ItemStack itemStack(Material material,String name) {
+        ItemStack stack=new ItemStack(material);
+        ItemMeta meta=stack.getItemMeta();
+        if(meta!=null){meta.setDisplayName(name);stack.setItemMeta(meta);}
+        return stack;
     }
 
     private void item(Inventory inv,int slot,Material material,String name,String... lore){

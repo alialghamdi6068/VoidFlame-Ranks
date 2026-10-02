@@ -203,7 +203,7 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
 
         public CompletableFuture<Void> deleteRank(String id) {
             Rank r = getRank(id);
-            if (r == null || "player".equals(r.id())) return CompletableFuture.failedFuture(new IllegalArgumentException("This rank cannot be deleted."));
+            if (r == null || "member".equals(r.id()) || "owner".equals(r.id())) return CompletableFuture.failedFuture(new IllegalArgumentException("This rank cannot be deleted."));
             String safe = id.toLowerCase(Locale.ROOT);
             cache.remove(safe);
             permissions.remove(safe);
@@ -350,7 +350,7 @@ public final class VoidFlameRanksPlugin extends JavaPlugin implements Listener {
             if (!p.hasPermission("voidflame.ranks.admin") && !p.hasPermission("voidflame.ranks.manage")) { p.sendMessage("§cNo permission."); return true; }
             if (args.length >= 2 && args[0].equalsIgnoreCase("set")) {
                 OfflinePlayer target=Bukkit.getOfflinePlayer(args[1]);
-                String id=args.length>=3?args[2]:"player";
+                String id=args.length>=3?args[2]:"member";
                 if (!ranks.canManageRank(p.getUniqueId(), id)) { p.sendMessage("§cYou cannot assign a rank at or above your own hierarchy."); return true; }
                 if (!ranks.canManagePlayer(p.getUniqueId(), target.getUniqueId())) { p.sendMessage("§cYou cannot modify a player with an equal or higher rank."); return true; }
                 ranks.setPlayerRank(target.getUniqueId(),id).thenRun(() -> Bukkit.getScheduler().runTask(this,()->{p.sendMessage("§aRank updated for §f"+target.getName()+"§a."); if(target.isOnline()) applyRank(target.getUniqueId());})).exceptionally(e->{p.sendMessage("§c"+root(e).getMessage());return null;});
